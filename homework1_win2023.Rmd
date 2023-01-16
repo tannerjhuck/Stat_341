@@ -1,0 +1,260 @@
+---
+title: "Homework 1"
+author: "Tanner Huck"
+subtitle: "Winter 2023"
+header-includes:
+    - \usepackage{amsmath}
+    - \usepackage{amsthm}
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+#Use this code chunk to include libraries, and set global options.
+
+knitr::opts_chunk$set(echo = TRUE)
+library(fastR2)
+library(tidyverse)
+
+```
+
+### Instructions
+
+- This homework is due in Gradescope on Wednesday Jan 11 by midnight PST.
+
+- Please answer the following questions in the order in which they are posed. 
+
+- Don't forget to knit the document frequently to make sure there are no compilation errors. 
+
+- When you are done, download the PDF file as instructed in section and submit it in Gradescope. 
+
+* * *
+
+### Exercises
+
+1. (Gizmo) The internal temperature in a gizmo (device) is a random variable X with PDF (in appropriate
+units)
+$$f(x) = 11 \cdot(1-x)^{10},\ \ \ 0 < x < 1$$
+
+a. The gizmo has a cutoff feature, so that whenever the temperature exceeds the cutoff - call it $k$ - it
+turns off. It is observed that the gizmo shuts off with probability $10^{-22}$. What is k?
+
+We want to find $P(X>k) = 10^{-22}$ where we want to solve for k. Thus
+$$1-10^{-22} = \int_{0}^{k} 11 * (1-x)^{10} dx$$
+$$\frac{1}{11} - \frac{10^{-22}}{11} = \int_{0}^{k} (1-x)^{10} dx$$
+Now doing a $u$ where $u=1-x$ and $du=-1 dx$.
+$$\frac{1}{11} - \frac{10^{-22}}{11} = \int_{1}^{1-k} -u^{10} du = \frac{u^{11}}{11}\big{|}_{1-k}^1$$
+$$\frac{1^{11}}{11}-\frac{(1-k)^{11}}{11} = \frac{1}{11} - \frac{10^{-22}}{11}$$
+$$1-(1-k)^{11} = 1- 10^{-22}$$
+$$(1-k)^{11} = 10^{-22}$$
+$$1-k = \sqrt[11]{10^{-22}}$$
+$$k = 1- \sqrt[11]{10^{-22}}$$
+Hence k is $1- \sqrt[11]{10^{-22}}$ or about 0.99.
+
+b. Fill in the blank: the number $k$ is the ________ quantile of the distribution of $X$.
+
+We know that the $pth$ quantile is $x$ where $x=F^{-1}(p)$. Then
+$$F(X) = P(X \leq x) = \int_{-\infty}^{x} f(t) dt $$
+And we know that 
+$$F(k) = P(X \leq k) = 1-P(X>k) = 1-10^{-22} = p $$
+Hence the number $k$ is the $1-10^{-22}$ quantile of the distribution of $X$.
+
+2. Pruim problem 3.46 on page 221   (Please review section 13.2 from notes for how to make QQplots. You can use `group = sex` in the mapping in order to create the conditional plots for part b.)
+
+```{r height qq plot, warning=FALSE}
+data_set <- Pheno
+
+ggplot(data = data_set) +
+  stat_qq(mapping = aes(sample = height),
+          distribution = qnorm) + 
+  stat_qqline(mapping = aes(sample = height),
+          distribution = qnorm) +
+  labs(title="Normal Quantile Plot of Heights",
+       x = "Standard Nomral Quantile",
+       y = "Sample Quantiles")
+```
+
+From our graph, we can see that the heights do not appear to be normally distributed. This is because our data is different from the normal distribution (shown by the stat_qq line) at smaller and larger quarantines.
+
+```{r warning=F}
+ggplot() +
+  geom_histogram(data = data_set,
+                 mapping = aes(x = height, y = ..density..),
+                  binwidth = 5,
+                 fill = "dark green",
+                 color = "black") +
+  geom_function(fun = dnorm,
+              args = list(mean = mean(data_set$height, na.rm = T),
+                         sd = sd(data_set$height, na.rm = T))) +
+  labs(x = "Height", 
+       y = "Density",
+       title = "Height Histogram",
+       subtitle = "Normal Distribution Overlaid") 
+
+```
+Also, when we look at a histogram of all heights, and compare it with a normal distribution, we can see that this is not a very good fit. Providing more evidence that we do not have a basis for using the normal distribuition for modeling our data.
+
+```{r height qq plot by sex, warning=FALSE}
+ggplot(data = data_set) +
+  stat_qq(mapping = aes(sample = height, 
+                        group = sex,
+                        color = sex),
+          distribution = qnorm) + 
+  stat_qqline(mapping = aes(sample = height,
+                            group = sex),
+          distribution = qnorm) +
+  labs(title="Normal Quantile Plot of Heights",
+       subtitle = "Grouped by sex",
+       x = "Standard Nomral Quantile",
+       y = "Sample Quantiles")
+```
+
+From our graph we can see that both the men and women in the study appear to be normally distributed. The men and womens data is very close to it's corresponding qq_line, their normal distribution.
+
+
+3. (CDF method) Suppose $X$ is a gamma random variable with shape parameter $k \: (>0)$ and rate parameter $\lambda\: (>0)$. In other words, the PDF of $X$ is given by:
+$$f(x) = \frac{\lambda^{k}}{\Gamma(k)} \: x^{k-1}\:e^{-\lambda\:x}, \ \ \ \  x > 0,$$
+where $\Gamma(k)$ is the gamma function. Review 13.3 from the notes if you need a reminder. 
+
+   Define $$Y = \frac{1}{X}.$$ 
+Show, using the CDF method, that $Y$ has PDF
+$$f(y) = \frac{\lambda^{k}}{\Gamma(k)} \: \frac{1}{y^{k+1}} e^{-\frac{\lambda}{y} } \ \ \ \ \ \ y > 0$$
+
+*1.* The first thing that we need to do is represent the CDF of Y:
+\begin{align*}
+F_Y(y) &= P(Y < y) \\
+       &= P(\frac{1}{X} < y) \\
+       &= P(X > \frac{1}{y}) \\
+       &= 1 - F_x(\frac{1}{y}) \\
+\end{align*}
+
+*2.* Then we can differentiate to find the PDF:
+\begin{align*}
+f(y) &= \frac{d}{dy} [1- F_X(\frac{1}{y})] \\
+     &= 0 - \frac{d}{dy} F_X(\frac{1}{y}) \\
+     &= - \frac{d}{dx} F_X(x) \cdot \frac{d}{dy} \frac{1}{y} \\
+     &= -f(x) \cdot -\frac{1}{y^2} \\
+     &= f(x) \cdot \frac{1}{y^2} \\
+\end{align*}
+
+*3.* Then finally we can plug our results into PDF of X.
+\begin{align*}
+f(y) &= \frac{1}{y^2} \frac{\lambda^{k}}{\Gamma(k)} \: \frac{1}{y}^{k-1}\:e^{-\lambda (\frac{1}{y})}  \\
+     &= \frac{\lambda^{k}}{\Gamma(k)} \cdot \frac{1}{y^2 \cdot y^{k-1}} \cdot e^{-\lambda (\frac{1}{y})}  \\
+     &= \frac{\lambda^{k}}{\Gamma(k)} \: \frac{1}{y^{k+1}} e^{-\frac{\lambda}{y} } \\
+\end{align*}
+
+4. (Beta dist)  The beta distribution is a probability distribution that is often used in applications where the random variable is a proportion. The beta PDF  depends on two *shape* parameters - call them $\alpha \: (> 0)$ and $\beta \: (> 0)$ - and is given by:
+$$f(x) = \frac{ \Gamma(\alpha + \beta)}{\Gamma(\alpha) \: \Gamma(\beta)} \: x^{\alpha - 1} \: (1 - x )^{\beta - 1} \ \ \ 0 < x < 1.$$
+
+a. Show that the uniform distribution on (0,1) is a special case of the beta when $\alpha = \beta = 1$.
+
+When $\alpha = \beta = 1$, the PDF of the Beta distribution is, 
+\begin{align*}
+f(x) &= \frac{ \Gamma(1 + 1)}{\Gamma(1) \: \Gamma(1)} \: x^{1 - 1} \: (1 - x )^{1 - 1} \\
+     &= \frac{1}{1 \cdot 1}(1)(1) \\
+     &= 1 \ \ \ \text{ for } 0 < x < 1 \\
+\end{align*}
+This is because we know that $\Gamma(1) \text{ and } \Gamma(2) = \Gamma(1+1)$ are both equal to $1$ (from the final study guide).
+
+And the PDF of a $Unif \sim (0,1)$ is,
+$$\frac{1}{1-0} = \frac{1}{1} = 1 $$
+
+Hence we can see that the uniform distribution on (0,1) has the same PDF as the beta distribution when $\alpha = \beta = 1$. Thus the uniform distribution on (0,1) is a special case of the beta when $\alpha = \beta = 1$.
+
+b. The beta distribution offers a very flexible array of shapes for modeling data. Run the following code interactively from your Console to see how it changes with different parameter values. Feel free to try other values for $\alpha$ and $\beta$. Then describe the impact of the parameters $\alpha$ and $\beta$ on the shape. Specifically when is it symmetric? When is it skewed to the right? Skewed to the left? Bowl shaped?  (Don't just state the $\alpha,\beta$ values, but rather provide a meaningful summary of the behavior )
+
+   
+```{r echo = F, eval = F} 
+#leave echo = FALSE and eval = FALSE on homework
+
+#create a dataframe from all possible combinations of the supplied vectors
+df <- expand.grid(alpha = c(0.5, 0.8, 1, 4, 10),
+                  beta = c(0.5,  0.8, 1, 4,  10),
+                  x = seq(0, 1, 0.05))
+
+#calculate the beta PDF for each combination of alpha and beta 
+
+df <- df %>% 
+      mutate(betapdf = dbeta(x, alpha, beta ))
+
+
+ 
+ggplot(data = df,
+       mapping=aes(x = x, y = betapdf ) )+
+      geom_line()+
+      facet_grid(alpha ~ beta,
+                 scales = "free",
+                 labeller = labeller(alpha = label_both,
+                                     beta = label_both ) )
+
+```
+*Bowl Shaped* -- The beta distribution appears to take on a bowl shape when both alpha and beta take on values less than 0.
+
+*Symmetric* -- The beta distribution appears to symmetric whenever alpha and beta take the same value (down the diagnol of the graphs).
+
+*Skewed to the right* -- The beta distribution appears to appears to be right skewed when beta $\geq$ alpha, beta > 1, and beta is not the same as alpha. 
+
+*Skewed to the left* -- The beta distribution appears to appears to be left skewed when alpha $\geq$ beta, alpha > 1, and beta is not the same as alpha. 
+
+c. Since the beta distribution is a valid PDF, it must integrate to 1. In other words, it must be the case that 
+\begin{align*}
+\int\limits_{0}^{1} x^{\alpha - 1} (1-x)^{\beta - 1} dx &= 
+     \frac{\Gamma(\alpha) \Gamma(\beta)}{\Gamma(\alpha + \beta)}.
+\end{align*}
+
+   Use this fact to show that the $rth$ moment of the Beta is given by
+
+\begin{align*}
+E\left[ X^{r} \right] &= \frac{\Gamma(\alpha + r)}{\Gamma(\alpha)} \times \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha + \beta + r) }.
+\end{align*}
+
+\begin{align*}
+E[X^{r}] &= \int_{-\infty}^{\infty} x^r f(x) dx\\
+         &= \int_{0}^{1} x^r \frac{ \Gamma(\alpha + \beta)}{\Gamma(\alpha) \: \Gamma(\beta)} x^{\alpha - 1} \: (1 - x )^{\beta - 1} dx \\
+         &= \frac{ \Gamma(\alpha + \beta)}{\Gamma(\alpha) \: \Gamma(\beta)} \int_{0}^{1} x^{r +\alpha - 1} (1 - x )^{\beta - 1} dx \\
+         &= \text{ using the fact given to us} \\
+         &= \frac{ \Gamma(\alpha + \beta)}{\Gamma(\alpha) \: \Gamma(\beta)} \cdot \frac{\Gamma(\alpha + r) \Gamma(\beta)}{\Gamma(\alpha + r + \beta)} \\
+         &= \frac{ \Gamma(\alpha + \beta)}{\Gamma(\alpha)} \cdot \frac{\Gamma(\alpha + r)}{\Gamma(\alpha + r + \beta)} \\
+         &= \frac{\Gamma(\alpha + r)}{\Gamma(\alpha)} \cdot \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha + \beta + r) } \\
+\end{align*} 
+
+Hence $E[X^{r}] = \frac{\Gamma(\alpha + r)}{\Gamma(\alpha)} \cdot \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha + \beta + r) }$.
+
+d. Use your result from part c. to show that
+\begin{align*}
+\mu      &= E\left[ X \right] =  \frac{\alpha}{\alpha + \beta}, \\
+\sigma^2 &= Var\left[ X \right] \\
+         &= \frac{\mu \: (1-\mu)}{\alpha + \beta + 1}
+\end{align*}
+
+\begin{align*}
+\mu &= E[X] \\
+    &= \text{ using result from part c} \\
+    &= E[X^1] \\
+    &= \frac{\Gamma(\alpha + 1)}{\Gamma(\alpha)} \cdot \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha + \beta + 1) } \\
+    &= \text{ using facts about the gamma distribution} \\
+    &= \frac{\alpha\Gamma{\alpha}}{\Gamma(\alpha)} \cdot \frac{\Gamma(\alpha + \beta)}{(\alpha + \beta)\Gamma(\alpha + \beta) } \\
+    &= \alpha \cdot \frac{1}{\alpha + \beta} \\
+    &= \frac{\alpha}{\alpha + \beta} \\
+\end{align*}
+
+\begin{align*}
+\sigma^2 &= Var\left[ X \right] = E[(X-\mu)^2] = E[X^2] - E[X]^2\\
+        & \text{ using result from part c and our answer to E[X]} \\
+        &= \frac{\Gamma(\alpha + 2)}{\Gamma(\alpha)} \cdot \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha + \beta + 2)} - (\frac{\alpha}{\alpha + \beta})^2 \\
+        & \text{ using facts about the gamma distribution} \\
+        &= (\alpha+1)\frac{\Gamma(\alpha + 1)}{\Gamma(\alpha)} \cdot \frac{\Gamma(\alpha + \beta)}{(\alpha+\beta+1)\Gamma(\alpha + \beta + 1)} - (\frac{\alpha}{\alpha + \beta})^2 \\
+        &= (\alpha+1)(\alpha)\frac{\Gamma(\alpha)}{\Gamma(\alpha)} \cdot \frac{\Gamma(\alpha + \beta)}{(\alpha+\beta+1)(\alpha + \beta)\Gamma(\alpha + \beta)} - (\frac{\alpha}{\alpha + \beta})^2 \\
+        &= \frac{(\alpha+1)(\alpha)}{(\alpha+\beta+1)(\alpha + \beta)} - (\frac{\alpha}{\alpha + \beta})^2 \\
+        &= \frac{(\alpha+1)(\alpha)(\alpha + \beta)}{(\alpha+\beta+1)(\alpha + \beta)(\alpha + \beta)} - (\frac{(\alpha)(\alpha)(\alpha+\beta+1)}{(\alpha + \beta)(\alpha + \beta)(\alpha+\beta+1)}) \\
+        &= \frac{(\alpha+1)(\alpha)(\alpha + \beta) - (\alpha)(\alpha)(\alpha+\beta+1)}{(\alpha + \beta)(\alpha + \beta)(\alpha+\beta+1)} \\
+        &= \frac{\alpha^{3} + \alpha^{2}\beta + \alpha^{2} + \alpha \beta - \alpha^{3} - \alpha^{2}\beta - \alpha^{2}}{(\alpha + \beta)^{2}(\alpha + \beta + 1)} \\
+        &= \frac{\alpha\beta}{(\alpha + \beta)^{2}(\alpha + \beta + 1)} \\
+        &= \frac{\alpha}{(\alpha + \beta)} \cdot \frac{\beta}{(\alpha + \beta)} \cdot \frac{1}{(\alpha + \beta + 1)} \\
+        & \text{ since } \frac{\alpha}{\alpha + \beta} + \frac{\beta}{\alpha + \beta} = 1 \\
+        &= \mu \cdot (1-\mu) \cdot \frac{1}{(\alpha + \beta + 1)} \\
+        &= \frac{\mu \: (1-\mu)}{\alpha + \beta + 1} \\
+\end{align*}
+
+
+

@@ -1,0 +1,191 @@
+---
+title: "Homework 2"
+subtitle:  "Joint, Marginal and Conditional"
+graphics: yes
+output: pdf_document
+header-includes:
+    - \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+* * * 
+### Instructions
+
+Please answer the following questions in the order in which they are posed. Add a few empty lines below each and write your answers there. Focus on answering in complete sentences. You will also need scratch paper/pen to work out the answers before typing it.
+
+For help with formatting documents in RMarkdown, please consult [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/). Another option is to search using Google. 
+
+* * *
+
+### Exercises 
+
+1. (Joint PMF) An urn contains four red chips, three white chips,
+and two blue chips. A random sample of size 3 is drawn
+without replacement. Let $X$ denote the number of white
+chips in the sample and $Y$ the number of blue chips. Write
+a formula for the joint PMF of $X$ and $Y$. Be sure to explain the components of your formula and why it makes sense. 
+
+   \emph{Hint: You will first want to make a table on scratch paper to understand the possible values for $x$ and $y$ and their corresponding probabilities. Then the formula for the PMF will be evident}
+
+Suppose that there are 4 red chips, 3 white chips, and 2 blue chips in which 3 chips are drawn at random without replacement. Let $X$ denote the number of white chips drawn and $Y$ denote the number of blue chips drawn. The Joint PMF of $X$ and $Y$ is shown in the table below.
+```{r Joint PMF}
+col1 <- c(1/21, 1/7, 1/21)
+col2 <- c(3/14, 2/7, 1/28)
+col3 <- c(1/7, 1/14, 0)
+col4 <- c(1/84, 0, 0)
+(joint_PMF <- data.frame("Y" = c(0,1,2), "0" = col1, "1" = col2, "2" = col3, "3" = col4))
+```
+
+The formula for the joint PMF of $X$ and $Y$ is,
+$$f(x,y) = \frac{ {4 \choose {4-x-y}}{3 \choose x}{2 \choose y} }{ {9 \choose 3} } \text{ for } x = 0,1,2,3 \text{ and } y=0,1,2 $$
+To get this PMF equation, we have to keep in mind how many total chips there are and how many of each chip is drawn for each value of $X$ and $Y$. We know that there are only 3 white chips and 2 blue chips, hence $X$ and $Y$ can take values of $x = 0,1,2,3, y=0,1,2$. Thus we can describe the number of white marbles drawn as ${3 \choose x}$ and the number of blue marbles as ${2 \choose y}$ for each 3 draws without replacement. Then the remaining marbles will be red, which we can describe as ${4 \choose {4-x-y}}$ (because there are 4 total red marbles and $4-x-y$ marbles left to draw). Then we need to divide by the total number of marbles drawn, which we write as ${9 \choose 3}$ because there are 9 total chips and we are drawing 3 of them. Putting this all together we get the PMF formula.
+
+2. (Multinomial) Let $U_1,U_2, . . . ,U_{1029}$ be independent
+uniformly distributed random variables. Let $X_1$ equal the number of $U_i$ less than
+.331, $X_2$ equal the number between .331 and .820, and $X_3$ equal the number greater than .820.
+
+
+   a. Calculate, using, R the probability of observing $X_1 = 354, X_2 = 492, X_3 = 183$. Be sure to show your code. State the joint distribution before launching into calculations. 
+   
+Let $U_1,U_2, . . . ,U_{1029}$ be independent uniformly distributed random variables where $X_1$ equal the number of $U_i$ less than .331, $X_2$ equal the number between .331 and .820, and $X_3$ equal the number greater than .820. Thus we know that $U_i \sim Unif(0,1)$ and we also know that the PDF of a uniform random variable is $f(x) = \frac{1}{a-b}$ for $a \leq x <b$ on the interval $[a,b)$.
+
+Then to find the probability that $X_1 = 354, X_2 = 492, X_3 = 183$, we first have to find the probabilities of landing in the ranges represented by $X_1, X_2,$ and $X_3$. Let $\pi_1, \pi_2, \pi_3$ represent these probabilities respectively. Since we know the PDF of $U_i$ is $f(u) = 1$ on the interval $0 \leq u < 1$. Then,
+\begin{align*}
+\pi_1 &= \int_{a}^{b} f(u) du \\
+      &= \int_{0}^{0.331} 1 du \\
+      &= 0.331 - 0 = 0.331 \\
+\end{align*}
+\begin{align*}
+\pi_2 &= \int_{0.331}^{0.820} 1 du \\
+      &= 0.820 - 0.331 = 0.489 \\
+\end{align*}
+\begin{align*}
+\pi_3 &= \int_{0.820}^{1} 1 du \\
+      &= 1 - 0.820 = 0.180 \\
+\end{align*}
+
+Now we can use a multinational distribution to find the probability of $X_1 = 354, X_2 = 492, X_3 = 183$. In order to do this we hae some assumptions.
+
+1. The number of trials is fixed at 1029, where each trial is a draw from a $Unif \sim (0,1)$.
+
+2. Probability of each trial is the same in each trial (the probabilities of landing in each ranges represented by $X_1, X_2,$ and $X_3$) that we just calculated.
+
+3. There are 3 outcomes in each trial, the draw is in one of 3 ranges, 0 to 0.331, 0.332 to 0.820, or 0.882 to 1.
+
+4. Finally we have to assume that each trial is independent. Meaning that the probability of one draw will not affect the outcome of another draw (draws from the $Unif \sim (0,1)$).
+
+Hence we have $<X_1, X_2, X_3> \sim Multinational(n=1029,\pi=<0.331,0.489,0.180>$ and the PDF is $f(x_1,x_2,x_3) = \frac{1029}{x_1x_2x_3}(0.331)^{x_1}(0.489)^{x_2}(0.180)^{x_3}$. Then,
+
+```{r multinom}
+prob <- dmultinom(x = c(354, 492, 183), size = 1029, prob = c(0.331,0.489,0.180))
+```
+Thus the probability of observing $X_1 = 354, X_2 = 492, X_3 = 183$ is `r prob`.
+
+   b. Calculate, using R as a calculator, the expected values and standard deviation of $X_2$? Be sure to show your code. State the marginal distribution before launching into calculations.
+
+We know that the marginal distribution of $X_2$  is $Binom\sim(n,\pi)$, thus the expected values and standard deviation of $Binom\sim(n,\pi)$ are $E[X]=n\pi$ and $\sqrt {Var[X]} = \sqrt {n\pi(1-\pi)}$. Then,
+```{r expected and sd}
+x_2_expected <- 1029 * 0.489
+x_2_sd <- sqrt(1029 * (0.489) * (1-0.489))
+```
+Thus we get $E[X_2] =$ `r x_2_expected` and $SD[X_2] =$ `r x_2_sd`.
+
+   
+3. (Marginal PMF) Let $X$ and $Y$ be discrete random variables with joint PMF 
+$$f(x, y) = \left(\frac{\lambda}{2} \right)^{y} \frac{e^{-\lambda}}{x! \:(y-x)!}$$
+
+   where $x$ and $y$ are (non-negative) integers and $0 \leq x \leq y$. That is, $x, y = 0, 1, 2, 3, \dots$ but with the constraint $0 \leq x \leq y$.
+
+   Determine $f_2(y)$, the marginal distribution of $Y$. Is this a familiar distribution? Show the steps.
+   
+      \emph{Hint: you will need to use the Binomial theorem with a = 1 and b = 1 to perform the summation over $x$. }  
+      
+By definition of marginal distribution,
+\begin{align*}
+f_2(y) &= \sum_{x} f(x,y) \\
+       &= \text{ since x takes on values of 0,1,2,3 and }  0 \leq x \leq y \\
+       &= \sum_{x=0}^{y} (\frac{\lambda}{2})^y \frac{e^{-\lambda}}{x!(y-x)!} \\
+       &= (\frac{\lambda}{2})^y e^{-\lambda} \sum_{x=0}^{y} \frac{1}{x!(y-x)!} \\
+       &= \text{ then we can multiply by y! inside the sumation and } \frac{1}{y!} \text{ outside the sumation} \\
+       &= \frac{1}{y!} (\frac{\lambda}{2})^y e^{-\lambda} \sum_{x=0}^{y} \frac{y!}{x!(y-x)!} \\
+       &= \frac{1}{y!} (\frac{\lambda}{2})^y e^{-\lambda} \sum_{x=0}^{y} {y \choose x} \\
+       &= \text{ note that the summation term can be replaced by } (1+1)^y \\
+       &= \text{ because by the binomial theorem, } (1+1)^y = \sum_{x=0}^{y} {y \choose x} 1^{x-y} 1^{x} \\
+       &= \frac{1}{y!} (\frac{\lambda}{2})^y e^{-\lambda}(1+1)^y \\
+       &= \frac{e^{-\lambda}\lambda^y}{y!}
+\end{align*}
+
+We can see that the marginal distribution of $Y$ is $\frac{e^{-\lambda}\lambda^y}{y!}$. Notice that $f_2(y)$ is the same as the PMF of a Poisson distribution where $\lambda$ represents the number of occurrences of event Y over a fixed time period.
+
+4. (Hierarchical model) Suppose a player is equally likely to have 4, 5 or 6 at-bats (opportunities to bat) in a baseball game. If $X$ is the number of opportunities to bat, then we are assuming that
+$$f_1(x) = P(X = x) = \frac{1}{3}, \ \ \ x = 4, 5,6.$$
+Suppose $Y$, the number of hits, is a Binomial random variable with size $X = x$ and probability of success $\pi=0.3$. That is 
+$$f(y|x) = P(Y = y | X = x) = Binom(x, 0.3).$$
+ 
+a. Fill in the numbers for the joint PMF, $f(x,y) = P(X = x, Y = y)$ in the cells indicated by (i) -- (v). Also fill in the number for the marginal PMF $f_2(y)$ in the cell indicated by (vi). Show work below the table so we know you are not just guessing.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{||c|c|c|c|c|c|c|c||} \hline
+& \multicolumn{7}{c||}{$y$} \\ \hline
+$x$ & 0 & 1 & 2 & 3 & 4 & 5 & 6  \\ \hline
+4 & \hspace*{0.2in} & \hspace*{0.2in} & (i) & \hspace*{0.2in}& (ii) & (iii) & \\ \hline \hline
+5 & & & (iv) & & & &  \\ \hline  \hline
+6 & & & (v) & & & &   \\ \hline \hline
+$f_2(y)$ & & & (vi) & & & & \\ \hline
+\end{tabular}
+\end{table}
+
+First we need to find the formula for the joint PMF of $X$ and $Y$. By definition of conditional distributions, we know that,
+\begin{align*}
+f(y|x) &= \frac{f(x,y)}{f_1(x)} \\
+       &= \text{ since } f_1(x) \text{ is given to be } 1/3 \\
+       &= \frac{f(x,y)}{1/3} \\
+       &= 3f(x,y)\\
+f(x,y) &= \frac{f(y|x)}{3} \\
+       &= f(Y|X) \text{ was given to be a binomal random variable with size $X = x$ and probability of success $\pi=0.3$} \\
+       &= \frac{Binom(X=x, \pi=0.3)}{3} \\
+       &= \text{ by definition of binomial random variable} \\
+       &= \frac{{x \choose y}0.3^y(1-0.3)^{x-y}}{3} \\
+\end{align*}
+Now using the joint PMF formula we can find specific probabilities. 
+```{r specific probs}
+(i <- choose(4, 2) * 0.3^2 * (1-0.3)^(4-2)/3)
+(ii <- choose(4, 4) * 0.3^4 * (1-0.3)^(4-4)/3)
+(iii <- choose(4, 5) * 0.3^5 * (1-0.3)^(4-5)/3)
+(iv <- choose(5, 2) * 0.3^2 * (1-0.3)^(5-2)/3)
+(v <- choose(6, 2) * 0.3^2 * (1-0.3)^(6-2)/3)
+(vi <- i + iv + v)
+```
+Then filling in the table, 
+\begin{table}[h]
+\centering
+\begin{tabular}{||c|c|c|c|c|c|c|c||} \hline
+& \multicolumn{7}{c||}{$y$} \\ \hline
+$x$ & 0 & 1 & 2 & 3 & 4 & 5 & 6  \\ \hline
+4 & \hspace*{0.2in} & \hspace*{0.2in} & (`r i`) & \hspace*{0.2in}& (`r ii`) & (`r iii`) & \\ \hline \hline
+5 & & & (`r iv`) & & & &  \\ \hline  \hline
+6 & & & (`r v`) & & & &   \\ \hline \hline
+$f_2(y)$ & & & (`r vi`) & & & & \\ \hline
+\end{tabular}
+\end{table}
+
+b. Write the conditional distribution of $X$ given $Y=2$. That is $$f(x|y=2) = P(X = x | Y = 2).$$ Again, be sure to state any formulas you are plugging into so we know you are not guessing.
+
+By definition of conditional distributions, we know that,
+\begin{align*}
+f(x|y) &= \frac{f(x,y)}{f_2(y)} \\
+f(x|y=2) &= \frac{f(x,2)}{f_2(2)} \\
+         &= \text{ from part a we know } f_2(2) = `r vi` \\
+         &= \frac{f(x,2)}{`r vi`} \\
+         &= \text{ using our joint PMF formula found in part a} \\
+         &= \frac{{x \choose 2}0.3^2(1-0.3)^{x-2}}{3}\frac{1}{`r vi`} \\
+         &= {x \choose 2} \cdot (0.7)^x \cdot (0.7)^{-2} \cdot (0.3)^2 \cdot \frac{1}{3 \cdot `r iv`} \\
+         &= \text{ which is about} \\
+         &= {x \choose 2} \cdot (0.7)^x \cdot 0.205 \\
+\end{align*}
+
+Hence $f(x|y=2) = {x \choose 2} \cdot (0.7)^x \cdot 0.205$ for $x=4,5,6$.
